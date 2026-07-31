@@ -33,23 +33,6 @@ if count == 0:
     )
 
     conn.commit()
-tasks = [
-    {
-        "id": 1,
-        "title": "Learn FastAPI",
-        "done": False
-    },
-    {
-        "id": 2,
-        "title": "Complete Assignment",
-        "done": False
-    },
-    {
-        "id": 3,
-        "title": "Watch Movie",
-        "done": True
-    }
-]
 class TaskCreate(BaseModel):
     title: str
 class TaskUpdate(BaseModel):
@@ -128,20 +111,61 @@ def get_task(task_id: int):
         "title": row[1],
         "done": bool(row[2])
     }
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, updated_task: TaskUpdate):
+
+    cursor.execute(
+        "SELECT * FROM tasks WHERE id = ?",
+        (task_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET title = ?, done = ?
+        WHERE id = ?
+        """,
+        (updated_task.title, updated_task.done, task_id)
+    )
+
+    conn.commit()
+
+    return {
+        "id": task_id,
+        "title": updated_task.title,
+        "done": updated_task.done
+    }
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int):
 
-    for task in tasks:
-        if task["id"] == task_id:
-            tasks.remove(task)
-            return {
-                "message": "Task deleted successfully"
-            }
-
-    raise HTTPException(
-        status_code=404,
-        detail="Task not found"
+    cursor.execute(
+        "SELECT * FROM tasks WHERE id = ?",
+        (task_id,)
     )
-    tasks.append(new_task)
 
-    return new_task
+    row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    cursor.execute(
+        "DELETE FROM tasks WHERE id = ?",
+        (task_id,)
+    )
+
+    conn.commit()
+
+    return {
+        "message": "Task deleted successfully"
+    }
