@@ -1,18 +1,28 @@
-import sqlite3
+import psycopg2
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 app = FastAPI()
-# Connect to SQLite database
-conn = sqlite3.connect("tasks.db", check_same_thread=False)
+load_dotenv()
+conn = psycopg2.connect(
+    host=os.getenv("DB_HOST"),
+    port=os.getenv("DB_PORT"),
+    database=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD")
+)
+
 cursor = conn.cursor()
 # Create tasks table if it doesn't exist
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     done BOOLEAN NOT NULL
 )
 """)
+
 
 conn.commit()
 # Check if the table is empty
@@ -28,9 +38,9 @@ if count == 0:
     ]
 
     cursor.executemany(
-        "INSERT INTO tasks (title, done) VALUES (?, ?)",
-        sample_tasks
-    )
+    "INSERT INTO tasks (title, done) VALUES (%s, %s)",
+    sample_tasks
+)
 
     conn.commit()
 class TaskCreate(BaseModel):
@@ -77,7 +87,7 @@ def create_task(task: TaskCreate):
 
     # Insert into database
     cursor.execute(
-        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        "INSERT INTO tasks (title, done) VALUES (%s,%s)",
         (task.title, False)
     )
 
@@ -94,7 +104,7 @@ def create_task(task: TaskCreate):
 @app.get("/tasks/{task_id}")
 def get_task(task_id: int):
     cursor.execute(
-        "SELECT * FROM tasks WHERE id = ?",
+        "SELECT * FROM tasks WHERE id = %s",
         (task_id,)
     )
 
@@ -115,7 +125,7 @@ def get_task(task_id: int):
 def update_task(task_id: int, updated_task: TaskUpdate):
 
     cursor.execute(
-        "SELECT * FROM tasks WHERE id = ?",
+        "SELECT * FROM tasks WHERE id = %s",
         (task_id,)
     )
 
@@ -130,8 +140,8 @@ def update_task(task_id: int, updated_task: TaskUpdate):
     cursor.execute(
         """
         UPDATE tasks
-        SET title = ?, done = ?
-        WHERE id = ?
+        SET title = %s, done = %s
+        WHERE id = %s
         """,
         (updated_task.title, updated_task.done, task_id)
     )
@@ -147,7 +157,7 @@ def update_task(task_id: int, updated_task: TaskUpdate):
 def delete_task(task_id: int):
 
     cursor.execute(
-        "SELECT * FROM tasks WHERE id = ?",
+        "SELECT * FROM tasks WHERE id = %s",
         (task_id,)
     )
 
@@ -160,7 +170,7 @@ def delete_task(task_id: int):
         )
 
     cursor.execute(
-        "DELETE FROM tasks WHERE id = ?",
+        "DELETE FROM tasks WHERE id = %s",
         (task_id,)
     )
 
