@@ -1,49 +1,52 @@
-# CRUD API with FastAPI & SQLite
+# Todo API with FastAPI, PostgreSQL & Supabase Authentication
 
-A Task Management REST API built using **FastAPI** and **SQLite** as part of the **FlyRank Internship Backend Track – Week 3 Assignment**.
-
-## Project Description
-
-This project implements a CRUD (Create, Read, Update, Delete) API for managing tasks.
-
-Initially, tasks were stored in an in-memory list. In Week 3, the application was migrated to **SQLite**, allowing task data to persist even after restarting the server.
+A secure REST API built using **FastAPI**, **PostgreSQL**, and **Supabase Authentication** as part of the FlyRank Internship Backend Track.
 
 ## Features
 
-- Get all tasks
-- Get a task by ID
-- Create a new task
-- Update an existing task
-- Delete a task
-- Automatic SQLite database creation
-- Automatic table creation
-- Automatic seeding of sample tasks on first run
-- Persistent storage using SQLite
+### Authentication
+- User Signup
+- User Login
+- JWT Authentication using Supabase
+- Protected Routes
+
+### Todo Management
+- Create Todo
+- Get All Todos
+- Get Todo by ID
+- Update Todo
+- Delete Todo
+- User-specific Todos (each user can access only their own data)
 
 ## Technologies Used
 
-- Python
+- Python 3
 - FastAPI
-- SQLite
+- PostgreSQL
+- Supabase Authentication
+- Psycopg2
+- Pydantic
 - Uvicorn
+- Python-dotenv
+- Docker
 
-## Why SQLite?
+---
 
-SQLite is a lightweight relational database that stores data in a single file (`tasks.db`). It requires no separate database server, making it ideal for small applications and learning backend development. It also ensures that task data persists after the server restarts.
-
-## Database
-
-Database file:
+## Project Structure
 
 ```
-tasks.db
+CRUD_API/
+│
+├── main.py
+├── requirements.txt
+├── .env.example
+├── Dockerfile
+├── compose.yaml
+├── README.md
+└── .gitignore
 ```
 
-The application automatically:
-
-- Creates the database if it doesn't exist.
-- Creates the `tasks` table if it doesn't exist.
-- Inserts three sample tasks only on the first run.
+---
 
 ## Installation
 
@@ -67,17 +70,44 @@ python -m venv venv
 
 ### 4. Activate the virtual environment
 
-Windows:
+Windows
 
 ```bash
 venv\Scripts\activate
 ```
 
+Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
 ### 5. Install dependencies
 
 ```bash
-pip install fastapi uvicorn
+pip install -r requirements.txt
 ```
+
+---
+
+## Environment Variables
+
+Create a `.env` file.
+
+Example:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=taskdb
+DB_USER=postgres
+DB_PASSWORD=password
+
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+```
+
+---
 
 ## Run the Application
 
@@ -85,7 +115,7 @@ pip install fastapi uvicorn
 python -m uvicorn main:app --reload
 ```
 
-The API will be available at:
+API:
 
 ```
 http://127.0.0.1:8000
@@ -97,51 +127,91 @@ Swagger Documentation:
 http://127.0.0.1:8000/docs
 ```
 
+---
+
+## Authentication Flow
+
+1. Register a user using:
+
+```
+POST /auth/signup
+```
+
+2. Login using:
+
+```
+POST /auth/login
+```
+
+3. Copy the **access_token** returned after login.
+
+4. Click **Authorize** in Swagger and paste the access token.
+
+5. Access protected endpoints.
+
+---
+
 ## API Endpoints
+
+### Public
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | / | Home |
 | GET | /health | Health Check |
-| GET | /tasks | Get all tasks |
-| GET | /tasks/{id} | Get task by ID |
-| POST | /tasks | Create a new task |
-| PUT | /tasks/{id} | Update a task |
-| DELETE | /tasks/{id} | Delete a task |
+| GET | /public/info | Public Endpoint |
+| GET | /supabase-test | Test Supabase Connection |
 
-## Example SQL Query
+### Authentication
 
-```sql
-SELECT * FROM tasks;
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /auth/signup | Register User |
+| POST | /auth/login | Login User |
+
+### Protected
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /protected/profile | Get Logged-in User |
+
+### Todo API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /todos | Create Todo |
+| GET | /todos | Get All Todos |
+| GET | /todos/{id} | Get Todo by ID |
+| PUT | /todos/{id} | Update Todo |
+| DELETE | /todos/{id} | Delete Todo |
+
+---
+
+## Docker
+
+Build and start the containers:
+
+```bash
+docker compose up --build
 ```
 
-This query retrieves all tasks stored in the SQLite database.
+Stop the containers:
 
-## Database Screenshot
-
-Add a screenshot of the `tasks` table from **DB Browser for SQLite** here.
-
-Example:
-
-```
-images/database.png
+```bash
+docker compose down
 ```
 
-```markdown
-![Database Screenshot](images/database.png)
-```
-
-## Project Structure
-
-```
-CRUD_API/
-│── main.py
-│── tasks.db
-│── README.md
-│── .gitignore
-└── requirements.txt
-```
+---
 
 ## Author
 
 **Seemakurti Harika**
+
+GitHub:
+https://github.com/seemakurti-harika
+
+---
+
+## License
+
+This project was developed for the **FlyRank Backend Internship**.
